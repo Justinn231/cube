@@ -13,7 +13,7 @@ from pydantic import BaseModel
 
 load_dotenv()
 
-API_KEY = os.environ["ANTHROPIC_API_KEY"]
+API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 AUTH_TOKEN = os.environ.get("AUTH_TOKEN", "")
 PORT = int(os.environ.get("PORT", 8080))
 
@@ -108,6 +108,11 @@ def sse(data: dict) -> str:
 
 
 async def agentic_loop(messages: list[dict]) -> AsyncGenerator[str, None]:
+    if not API_KEY or API_KEY.startswith("sk-ant-dein"):
+        yield sse({"type": "text_delta", "text": "⚠️ Kein gültiger ANTHROPIC_API_KEY in der .env hinterlegt.\n\nBitte unter https://console.anthropic.com einen Key erstellen und in homeserver-ui/.env eintragen."})
+        yield sse({"type": "done"})
+        return
+
     while True:
         tool_use_blocks: list[anthropic.types.ToolUseBlock] = []
 
