@@ -1,9 +1,11 @@
 import assert from "node:assert";
 import fs from "node:fs";
+import http from "node:http";
 import os from "node:os";
 import path from "node:path";
 import { Ledger } from "./ledger.js";
 import { Relay } from "./relay.js";
+import { localGenerate } from "./localllm.js";
 
 // Minimal smoke test for the pure components (no network, no worker):
 //   npm run build && npm run smoke
@@ -29,6 +31,36 @@ assert.equal(relay.settle(req.id, "resolved", "added to .env")?.status, "resolve
 assert.equal(relay.list("open").length, 0);
 assert.equal(relay.list().length, 1);
 assert.equal(relay.settle("nope", "resolved", "x"), null);
+
+// Local model client against a mock Ollama server.
+const mock = http.createServer((req, res) => {
+  let body = "";
+  req.on("data", (c) => (body += c));
+  req.on("end", () => {
+    const parsed = JSON.parse(body) as { model: string; prompt: string };
+    assert.equal(req.url, "/api/generate");
+    assert.equal(parsed.model, "gemma3:4b-it-qat");
+    res.setHeader("content-type", "application/json");
+    res.end(JSON.stringify({ response: `echo: ${parsed.prompt}` }));
+  });
+});
+await new Promise<void>((r) => mock.listen(0, "127.0.0.1", r));
+const port = (mock.address() as { port: number }).port;
+const reply = await localGenerate(
+  `http://127.0.0.1:${port}`,
+  "gemma3:4b-it-qat",
+  "ping",
+);
+assert.equal(reply, "echo: ping");
+await assert.rejects(
+  localGenerate(`http://127.0.0.1:${port}`, "", "ping"),
+  /no local model configured/,
+);
+await assert.rejects(
+  localGenerate("http://127.0.0.1:9", "gemma3:4b-it-qat", "ping"),
+  /unreachable/,
+);
+mock.close();
 
 fs.rmSync(dir, { recursive: true, force: true });
 console.log("smoke: all assertions passed");

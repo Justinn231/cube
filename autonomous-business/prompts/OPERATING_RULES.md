@@ -36,3 +36,25 @@ notifications:
 7. **Delegate execution.** If your CLI supports subagents or cheaper models,
    use the strongest model for planning/decisions and cheaper models for
    mechanical execution.
+
+## Local model delegation (three-tier routing)
+
+If a local model tier is configured (`{CLI} local "<prompt>"`, extra context
+via stdin), use it to conserve your own rate limits. It is much cheaper but
+much weaker and hallucinates more — treat it accordingly.
+
+**Delegate to the local model** (bulk/mechanical work with all context in the
+prompt): summarizing logs or documents, extracting fields from text,
+classifying/tagging items, first drafts of routine text, reformatting,
+generating test data.
+
+**Never delegate:** decisions of any kind, anything involving money or the
+ledger, code that ships without your review, external communication (posts,
+replies, deliverables) without your review, and any factual claims — verify
+facts yourself before using them.
+
+**Treat local output as an untrusted draft:** review before use; assume
+hallucinated names, numbers, and URLs until checked. The local model has no
+tool or file access — include everything it needs in the prompt, and prefer
+several small, self-contained prompts over one big one. If the local tier is
+unreachable, do the task yourself rather than blocking.

@@ -2,6 +2,7 @@ import { loadConfig } from "./config.js";
 import { Ledger } from "./ledger.js";
 import { Relay } from "./relay.js";
 import { Telegram } from "./telegram.js";
+import { localGenerate } from "./localllm.js";
 
 // Agent-facing CLI. The worker calls this from inside its cycles to record
 // money movements, file human-in-the-loop requests, and notify the operator.
@@ -12,6 +13,7 @@ import { Telegram } from "./telegram.js";
 //   cli.js relay request <kind> <description...>
 //   cli.js relay list
 //   cli.js notify <message...>
+//   cli.js local <prompt...>          (stdin, if piped, is appended as context)
 async function main(): Promise<void> {
   const config = loadConfig();
   const [group, action, ...rest] = process.argv.slice(2);
@@ -89,6 +91,18 @@ async function main(): Promise<void> {
     return;
   }
 
+  if (group === "local") {
+    const prompt = [action, ...rest].filter(Boolean).join(" ");
+    if (!prompt) fail("usage: local <prompt...>  (pipe extra context via stdin)");
+    const stdin = process.stdin.isTTY ? "" : await readStdin();
+    const full = stdin ? `${prompt}\n\n---\nInput:\n${stdin}` : prompt;
+    const out = await localGenerate(config.ollamaUrl, config.localModel, full, {
+      timeoutMs: config.localTimeoutSeconds * 1000,
+    });
+    console.log(out.trim());
+    return;
+  }
+
   if (group === "notify") {
     const message = [action, ...rest].filter(Boolean).join(" ");
     if (!message) fail("usage: notify <message...>");
@@ -97,8 +111,14 @@ async function main(): Promise<void> {
   }
 
   fail(
-    "usage: <ledger add|ledger list|ledger verify|relay request|relay list|notify> ...",
+    "usage: <ledger add|ledger list|ledger verify|relay request|relay list|notify|local> ...",
   );
+}
+
+async function readStdin(): Promise<string> {
+  const chunks: Buffer[] = [];
+  for await (const chunk of process.stdin) chunks.push(chunk as Buffer);
+  return Buffer.concat(chunks).toString("utf8").trim();
 }
 
 function fail(msg: string): never {

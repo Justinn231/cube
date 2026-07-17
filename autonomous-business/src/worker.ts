@@ -103,6 +103,7 @@ function buildCyclePrompt(config: Config): string {
     `- Time: ${new Date().toString()} (timezone: ${config.timezone})`,
     `- Workspace (your cwd, persistent between cycles): ${config.workspaceDir}`,
     `- Ledger: income ${totals.income.toFixed(2)} (${totals.verifiedIncome.toFixed(2)} verified), expenses ${totals.expenses.toFixed(2)}, net ${totals.net.toFixed(2)} ${config.currency}`,
+    `- Local model tier: ${config.localModel ? `${config.localModel} via \`node ${cliPath} local "<prompt>"\` (cheap but weak — delegation rules apply)` : "not configured"}`,
     `- Open relay requests (waiting on human, do NOT block on these):\n${formatRequests(openRequests)}`,
     `- Recently settled relay requests:\n${formatRequests(recentlySettled)}`,
     steer

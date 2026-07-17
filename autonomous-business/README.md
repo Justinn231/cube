@@ -40,6 +40,13 @@ Kernideen aus den beiden Experimenten, hier eingebaut:
   Agent arbeitet währenddessen weiter.
 - **Zeitzone, Budget, tägliche Distribution** sind in Config und Prompts fest
   verankert.
+- **Dreistufiges Modell-Routing:** Frontier-Modell denkt, Mittelklasse führt
+  aus, und ein optionales **lokales Modell** (Ollama, z. B. `gemma3:4b-it-qat`)
+  übernimmt mechanische Massenarbeit, um Rate-Limits zu strecken und ein
+  kleineres Abo zu ermöglichen. Wegen der höheren Halluzinationsrate kleiner
+  Modelle gilt: kein Tool-Zugriff, niedrige Temperatur, Ausgaben sind immer
+  ungeprüfte Entwürfe, nie Geld/Entscheidungen/Außenkommunikation
+  (Delegations-Regeln in `prompts/OPERATING_RULES.md`).
 
 ## Lokal ausprobieren (ohne Accounts, ohne Secrets)
 
@@ -57,6 +64,22 @@ node dist/cli.js ledger add income 4 task-market "telegram forwarder bounty"
 node dist/cli.js relay request api-key "Need FAL_KEY in .env"
 node dist/cli.js ledger list
 ```
+
+## Lokales Modell aktivieren (optional)
+
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+ollama pull gemma3:4b-it-qat          # ~4 GB RAM, läuft auf dem 8-GB-VPS
+# in .env: LOCAL_MODEL=gemma3:4b-it-qat
+node dist/cli.js local "Fasse zusammen:" < irgendein.log   # manueller Test
+```
+
+Der Worker bekommt die Verfügbarkeit im Zyklus-Prompt mitgeteilt und delegiert
+dann selbstständig nach den Regeln in `OPERATING_RULES.md`. Größere Varianten:
+`12b-it-qat` braucht einen 16-GB-VPS, `27b-it-qat` ist CPU-only nicht sinnvoll
+(GPU-Server nötig — rechnet sich erst, wenn man nachweislich am Rate-Limit
+hängt). Die QAT-Varianten sind quantisierungsrobust trainiert und brauchen
+~3× weniger RAM bei nahezu gleicher Qualität.
 
 ## Deployment (Tag 0)
 
@@ -93,6 +116,7 @@ Was **du** einmalig tust (alles, was Captcha/KYC/Identität braucht):
 | `src/ledger.ts` | Append-only-Ledger (JSONL), Verifikations-Flag |
 | `src/relay.ts` | Human-in-the-loop-Request-Queue |
 | `src/telegram.ts` | Bot-API-Client (Long-Polling, ohne Dependencies) |
+| `src/localllm.ts` | Ollama-Client für die lokale Modell-Stufe |
 | `src/dashboard.ts` | Read-only-Konsole auf localhost |
 | `prompts/GOAL.md` | Geschäftsziel + Prioritäten (Task-Marktplätze zuerst) |
 | `prompts/OPERATING_RULES.md` | Hard Rules: Wahrheitspflicht, Spend-Guard, Secrets, ToS |

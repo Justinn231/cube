@@ -151,6 +151,69 @@ Alles, was Captcha/KYC/Identität braucht, wird **vorab** erledigt, damit der Ag
 - Loop-Uptime / Anzahl Watchdog-Eingriffe
 - Distribution-Metriken (Directory-Listings, Anfragen an Storefront, Waitlist-Signups)
 
-## 10. Fazit
+## 10. Wirtschaftlichkeit (Profitabilitäts-Review)
 
-Die beiden Experimente zeigen: Der Engpass ist nicht die Intelligenz des Modells, sondern **(1) Distribution, (2) agent-unfreundliche Infrastruktur (Accounts/KYC/Captchas) und (3) Loop-Stabilität** (Rate-Limits, Guardrails). Dieser Plan löst genau diese drei Punkte — Task-Marktplätze als sofortige Einnahmequelle mit eingebauter Distribution, ein Relay-Portal plus Tag-0-Setup gegen den Infrastruktur-Engpass, und ein Supervisor-Watchdog für den Dauerbetrieb. Fable 5 machte 6 Cent, Sol ~15 $ — mit dieser Architektur ist das realistische Ziel für Monat 1, die eigenen Betriebskosten zu verdienen, und ab Monat 3 profitabel zu skalieren.
+### Fixkosten pro Monat
+
+| Posten | Kosten |
+|---|---|
+| VPS (Hetzner, 4 vCPU / 8 GB) | ~8 € |
+| Domain | ~1 € |
+| Frontier-Abo: Claude Max 5x ~100 $ **oder** Max 20x / Codex Pro ~200 $ | 100–200 $ |
+| Optional: 16-GB-VPS für 12B-Lokalmodell | +~10 € |
+| **Summe** | **~110–215 $/Monat** |
+
+**Break-even: ~3,60–7 $ verifizierter Umsatz pro Tag.** Beobachtet in den Experimenten: Fable 0,01 $/Tag, Sol ~2,10 $/Tag (~64 $/Monat hochgerechnet) — also **deckt selbst das bessere Experiment die Kosten nicht**. Das muss man nüchtern so festhalten.
+
+### Deckungsbeitrag je Geschäftsmodell
+
+| Modell | Belegter Umsatz | Variable Kosten | Einschätzung |
+|---|---|---|---|
+| Task-Marktplätze | 4–6 $/Bounty (Forwarder, Bild-Frames, Logos) | fast nur Tokens | **Einziges Modell mit belegtem positivem Deckungsbeitrag.** Engpass ist das Bounty-Angebot, nicht die Kapazität. $/h pro Bounty-Typ aus dem Ledger auswerten, nur Top-Typen bedienen. |
+| Agent-Storefront | Cent-Beträge (Indexer-Zahlungen) | ~0 | Mitlaufen lassen (kostet nichts), aber keine Arbeitszeit investieren, bis echte Nachfrage messbar ist. |
+| Mikroprodukte via Stripe | unbelegt | Stripe ~2,9 % + 0,30 $ | Bei 1-$-Preisen frisst die Fixgebühr ~33 % der Marge — nur mit Preisen ≥ 5–10 $ und stehender Distribution sinnvoll. |
+| DeFi/Prediction | brutto größter Einzelposten (10 $), aber Scams/Blocks/Bad Debt | hoch + Rechtsrisiko | Bleibt ausgeschlossen — negativer risikoadjustierter Erwartungswert. |
+
+### Szenarien (verifizierter Umsatz, Monat 1–3)
+
+| Szenario | Umsatz/Monat | Ergebnis bei 100-$-Setup | bei 200-$-Setup |
+|---|---|---|---|
+| Pessimistisch | 0–30 $ | −80 bis −110 $ | −180 bis −210 $ |
+| Basis (≈ Sol-Niveau, leicht optimiert) | 60–120 $ | −50 bis +10 $ | −150 bis −90 $ |
+| Optimistisch (Bounty-Pipeline skaliert) | 250 $+ | profitabel | ~break-even+ |
+
+**Konsequenzen:**
+1. **Mit dem 100-$-Abo starten**, nicht mit 200 $ — die Lokal-Modell-Stufe (§11) gleicht das kleinere Kontingent aus. Halbiert den Break-even auf ~3,60 $/Tag.
+2. **Sonderfall: Abo bereits vorhanden** (weil man es ohnehin privat/beruflich nutzt) → Grenzkosten ≈ 10 €/Monat VPS, dann ist schon das Basisszenario profitabel. Das ist ehrlicherweise der realistischste Weg zu „profitabel ab Monat 1".
+3. **Abbruchkriterium festlegen:** Nach 6 Wochen < 25 $/Woche verifiziert → stoppen oder pivotieren. Monat 1 ist als bezahltes Lernprojekt einzuordnen, nicht als Einkommen.
+
+## 11. Dritte Modell-Stufe: lokales Modell (z. B. Gemma 3 QAT via Ollama)
+
+Erweiterung des Modell-Routings auf drei Stufen:
+
+| Stufe | Modell | Aufgabe |
+|---|---|---|
+| 1 – Denken | Frontier (Fable/Sol) | Planung, Entscheidungen, Geschäftslogik |
+| 2 – Ausführen | Mittelklasse (Opus/Sonnet) | Coding, Deliverables, Kommunikation |
+| 3 – Mechanik | **Lokal (Gemma 3 QAT)** | Zusammenfassen, Extrahieren, Klassifizieren, Erstentwürfe, Reformatieren, Testdaten |
+
+**Ökonomie — ehrlich gerechnet:** Das Abo ist eine Flatrate, das Lokalmodell spart also nicht „pro Token", sondern: (1) es **streckt die Rate-Limits** — mechanische Massenarbeit verbraucht kein Kontingent mehr, weniger Backoff-Leerlauf; (2) es **ermöglicht das 100-$- statt 200-$-Abo** (~100 $/Monat echte Ersparnis); (3) Betriebskosten lokal ≈ 0 auf vorhandener Hardware.
+
+**Dimensionierung (QAT = Quantization-Aware Training, ~3× weniger RAM bei nahezu bf16-Qualität):**
+
+| Modell | RAM | Hardware | Empfehlung |
+|---|---|---|---|
+| gemma3:1b-it-qat | ~1 GB | jeder VPS | zu schwach, nur Tagging/Triage |
+| **gemma3:4b-it-qat** | ~4 GB | vorhandener 8-GB-VPS, 0 € extra | **Standard-Empfehlung** (CPU-only langsam, für Batch-Arbeit egal) |
+| gemma3:12b-it-qat | ~9 GB | 16-GB-VPS, +~10 €/M | wenn 4B-Qualität nicht reicht |
+| gemma3:27b-it-qat | ~18 GB | GPU-Server, +50–100 €/M | erst wenn nachweislich Rate-Limit-gebunden — sonst frisst es die Abo-Ersparnis wieder auf |
+
+**Risiko-Leitplanken (geringere Intelligenz, höhere Halluzinationsrate):** Das Lokalmodell hat keinen Tool-/Datei-Zugriff, niedrige Temperatur, und seine Ausgaben gelten immer als ungeprüfter Entwurf. Es darf **nie**: Entscheidungen treffen, Ledger/Geld anfassen, extern kommunizieren oder Fakten liefern, die ungeprüft weiterverwendet werden. Der Hauptagent reviewt jede Ausgabe (Namen, Zahlen, URLs gelten bis zur Prüfung als halluziniert). Diese Regeln sind im Framework fest verankert (`prompts/OPERATING_RULES.md`), die Anbindung läuft über `node dist/cli.js local "<prompt>"` (Ollama-API).
+
+**Ausbaustufe (noch nicht implementiert):** „Filler-Cycles" — während Rate-Limit-Backoffs erledigt das Lokalmodell Housekeeping (Notizen konsolidieren, Entwürfe vorbereiten), damit Leerlaufzeit produktiv wird.
+
+## 12. Fazit
+
+Die beiden Experimente zeigen: Der Engpass ist nicht die Intelligenz des Modells, sondern **(1) Distribution, (2) agent-unfreundliche Infrastruktur (Accounts/KYC/Captchas) und (3) Loop-Stabilität** (Rate-Limits, Guardrails). Dieser Plan löst genau diese drei Punkte — Task-Marktplätze als sofortige Einnahmequelle mit eingebauter Distribution, ein Relay-Portal plus Tag-0-Setup gegen den Infrastruktur-Engpass, und ein Supervisor-Watchdog für den Dauerbetrieb. Dazu kommt ein dreistufiges Modell-Routing (Frontier denkt, Mittelklasse arbeitet, Lokalmodell erledigt Mechanik), das den Break-even auf ~3,60 $/Tag halbiert.
+
+Die nüchterne Wahrheit aus §10: Fable 5 machte 6 Cent, Sol ~2 $/Tag — **kein Experiment war profitabel**, und wer ein Abo eigens dafür kauft, startet mit 100–200 $/Monat im Minus. Realistisch profitabel ist das Setup ab Tag 1 nur, wenn das Abo ohnehin existiert (Grenzkosten ~10 €/Monat). Ansonsten gilt: Monat 1 ist ein bezahltes Lernprojekt mit klarem Abbruchkriterium (6 Wochen, 25 $/Woche verifiziert), und der Weg zur Profitabilität führt über die $/h-Auswertung der Bounty-Typen im Ledger — skaliert wird nur, was nachweislich positiven Deckungsbeitrag hat.
