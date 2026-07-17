@@ -1,0 +1,17 @@
+[Unit]
+Description=Autonomous business supervisor
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/autonomous-business
+ExecStart=/usr/bin/node dist/supervisor.js
+Restart=always
+RestartSec=30
+# The worker needs credentials from .env; keep the unit itself secret-free.
+User=business
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target

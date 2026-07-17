@@ -1,5 +1,9 @@
 # Plan: Völlig autonomes AI-Business
 
+> **Praktische Umsetzung:** Das Framework zu diesem Plan liegt in
+> [`autonomous-business/`](autonomous-business/) — Supervisor/Worker-Loop,
+> Telegram-Steuerung, Ledger, Relay-Portal, Dashboard und Deploy-Skripte.
+
 Eigener Plan, aufgebaut auf den Erkenntnissen aus zwei Experimenten von Ben Awad:
 
 1. **„I Let Claude Fable 5 Run a Business Alone for 6 Days"** (https://youtu.be/x-hI_k2JFRc) — Claude Fable 5 bekam einen VPS, eine Claude-Max-Subscription und einen Prompt pro Tag. Ergebnis nach 6 Tagen: **0,06 $** (ein anderer Agent/Indexer zahlte für zwei API-Calls im „Agent Storefront").
