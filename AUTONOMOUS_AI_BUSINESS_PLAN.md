@@ -212,7 +212,25 @@ Erweiterung des Modell-Routings auf drei Stufen:
 
 **Ausbaustufe (noch nicht implementiert):** „Filler-Cycles" — während Rate-Limit-Backoffs erledigt das Lokalmodell Housekeeping (Notizen konsolidieren, Entwürfe vorbereiten), damit Leerlaufzeit produktiv wird.
 
-## 12. Fazit
+## 12. Neue Ideen aus „AI Agent Ecosystem Tour 2" (androoAGI)
+
+Quelle: https://www.tiktok.com/@androoagi/video/7646249622893038879 (6,5 min, 860K Views). Der Creator zeigt eine „Raumstation", in der Agents (Hermes-Harness, GPT 5.5, Orchestrator „Ultron") parallel mehrere Businesses betreiben. **Wichtige Einordnung:** Das Video ist Werbung für das Hermes-Harness; die Umsatzclaims (~20.000 $ in 2 Monaten bei ~400 $/Monat Kosten) sind unverifiziert — genau die Art Behauptung, für die unser Ledger die Verifikationspflicht hat. Trotzdem stecken übernehmenswerte Betriebsideen darin:
+
+**Übernehmen:**
+
+1. **Portfolio statt Einzel-Business.** Mehrere Micro-Businesses parallel auf gemeinsamer Infrastruktur, jedes mit eigener G&V im Ledger (Ausbaustufe: `business`-Tag pro Ledger-Eintrag). Der Orchestrator verteilt Zyklen gewichtet nach Deckungsbeitrag statt rein sequenziell.
+2. **War-Room als Institution.** Kill-/Skalierungs-Entscheidungen nicht ad hoc, sondern als wiederkehrender Review mit festen Regeln: „Was läuft, nicht anfassen; was nach X Wochen Verlust macht, killen" (im Video: Supplement-Firma mit Ad-Verlusten gekillt → Etsy-Store Nr. 3). Verschärft unsere Tag-7-Retro zu einem stehenden Mechanismus.
+3. **Research-Lab: „Sell what sells."** Nachfrage-Validierung durch Analyse dessen, was auf Marktplätzen nachweislich verkauft, statt Produkte zu erfinden — als wiederkehrender Zyklus, der einen Ideen-Backlog mit Evidenz füttert. **Rote Linie:** Nachfrage-Signale und Nischen analysieren ja, fremde Designs kopieren nein (das im Video gezeigte „Designs leicht abgewandelt replizieren" ist IP-Verletzung und der häufigste Etsy-Ban-Grund).
+4. **Communications-Lab → Entwurfs-Queue im Relay.** Der Agent beantwortet Inbound nicht direkt, sondern legt Antwort-Entwürfe zur Ein-Klick-Freigabe vor. Das macht aus unserer Regel „Außenkommunikation braucht Review" ein produktives Feature statt einer Bremse — und skaliert den Menschen, statt ihn zu ersetzen.
+5. **Publishing-Pipeline: das Business vermarktet sich selbst.** Produktfotos → Slideshows → eigener TikTok-/Social-Kanal, alles vom System geplant. Und die Meta-Ebene: *Das Video über das Experiment ist selbst der profitabelste Teil des Experiments* (gilt auch für Ben Awads Videos). Konsequenz: Der Tagesreport sollte automatisch dokumentationsfähiges Material erzeugen (Screenshots, Meilensteine) — der Experiment-Content ist ein eigener Einnahmekanal.
+6. **Menschen-Marktplätze als Geschäftsmodell #5.** Das Video verkauft an Menschen auf etablierten Märkten (Etsy/POD, Fiverr-artige Services à 20 $) statt an Agents (Cent-Beträge). Wenn auch nur ein Bruchteil der Claims stimmt, liegt dort mehr Kaufkraft als in Agent-Task-Märkten. Aufnahme in die Prioritätenliste mit Vorbehalten: gesättigte Märkte, Etsy-/Fiverr-KYC und Gebühren, Review-Management, strikte ToS-/IP-Konformität, und POD-Margen erst nach Gebühren/Basiskosten rechnen.
+7. **Archives: Entscheidungs-Log.** Neben dem Geld-Ledger ein append-only Log aller Entscheidungen und Ideen (`decisions.md`), damit Pivots auf dokumentierter Historie basieren statt auf dem Kontextfenster.
+
+**Nicht übernehmen:** Design-Kopieren (IP-Risiko), „Kunden zahlen für etwas, das gratis ginge" als Geschäftsprinzip (kurzfristig legal, langfristig Reputations-/Refund-Risiko), Agents mit Vollzugriff auf alle privaten Accounts (stattdessen Least-Privilege pro Business), unverifizierte Umsatz-Screenshots als Benchmark.
+
+**Profitabilitäts-Quervergleich zu §10:** Die Claims (330 $/Tag) vs. Ben Awads Messung (2 $/Tag) klaffen um Faktor >150 auseinander. Die plausible Erklärung neben Übertreibung: (a) deutlich mehr Human-in-the-loop (Accounts, Freigaben, Ads), (b) Verkauf an Menschen auf etablierten Marktplätzen statt an Agents, (c) 2 Monate Laufzeit statt 1 Woche. Das stützt die Portfolio-These: Agent-Task-Märkte als verlässlicher Sockel, Menschen-Marktplätze als Upside — beides parallel, mit War-Room-Review nach Deckungsbeitrag.
+
+## 13. Fazit
 
 Die beiden Experimente zeigen: Der Engpass ist nicht die Intelligenz des Modells, sondern **(1) Distribution, (2) agent-unfreundliche Infrastruktur (Accounts/KYC/Captchas) und (3) Loop-Stabilität** (Rate-Limits, Guardrails). Dieser Plan löst genau diese drei Punkte — Task-Marktplätze als sofortige Einnahmequelle mit eingebauter Distribution, ein Relay-Portal plus Tag-0-Setup gegen den Infrastruktur-Engpass, und ein Supervisor-Watchdog für den Dauerbetrieb. Dazu kommt ein dreistufiges Modell-Routing (Frontier denkt, Mittelklasse arbeitet, Lokalmodell erledigt Mechanik), das den Break-even auf ~3,60 $/Tag halbiert.
 
