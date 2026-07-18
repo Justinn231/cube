@@ -9,6 +9,9 @@ export interface LedgerEntry {
   amount: number;
   currency: string;
   source: string;
+  // Which micro-business in the portfolio this entry belongs to (per-business
+  // P&L drives the war-room kill/scale decisions).
+  business?: string;
   ref?: string;
   note?: string;
   // Entries written by the agent start unverified. A human (or an external
@@ -87,5 +90,24 @@ export class Ledger {
       net: income - expenses,
       entries: all.length,
     };
+  }
+
+  totalsByBusiness(): Map<
+    string,
+    { income: number; expenses: number; net: number }
+  > {
+    const out = new Map<
+      string,
+      { income: number; expenses: number; net: number }
+    >();
+    for (const e of this.readAll()) {
+      const key = e.business ?? "(untagged)";
+      const t = out.get(key) ?? { income: 0, expenses: 0, net: 0 };
+      if (e.type === "income") t.income += e.amount;
+      else t.expenses += e.amount;
+      t.net = t.income - t.expenses;
+      out.set(key, t);
+    }
+    return out;
   }
 }

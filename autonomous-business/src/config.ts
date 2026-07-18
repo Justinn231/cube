@@ -23,6 +23,7 @@ export interface Config {
   ollamaUrl: string;
   localModel: string;
   localTimeoutSeconds: number;
+  warRoomWeekday: number;
 }
 
 function parseEnvFile(file: string): Record<string, string> {
@@ -85,6 +86,8 @@ export function loadConfig(): Config {
     ollamaUrl: get("OLLAMA_URL", "http://127.0.0.1:11434"),
     localModel: get("LOCAL_MODEL", ""),
     localTimeoutSeconds: num("LOCAL_TIMEOUT_SECONDS", 300),
+    // 0=Sunday … 6=Saturday; first cycle of that day runs the war-room review.
+    warRoomWeekday: num("WAR_ROOM_WEEKDAY", 0),
   };
 
   process.env.TZ = config.timezone;

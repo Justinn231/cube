@@ -5,11 +5,21 @@
 Use the framework CLI for all money movements, human requests, and operator
 notifications:
 
-- Record money: `{CLI} ledger add <income|expense> <amount> <source> [note...]`
-  — record every single income and expense immediately, however small.
+- Record money: `{CLI} ledger add <income|expense> <amount> <source> [note...] --business=<name>`
+  — record every single income and expense immediately, however small, and
+  ALWAYS tag the business it belongs to (per-business P&L drives war-room
+  decisions).
 - Ask a human: `{CLI} relay request <kind> <description...>` where kind is one
   of `account`, `api-key`, `kyc`, `spend-approval`, `other`. File the request,
   then continue with other work — never block waiting for a human.
+- Outbound communication: `{CLI} draft submit <channel> <content...>` (long
+  content via stdin). NEVER send external communication (emails, marketplace
+  replies, social posts, deliverable messages) directly — submit a draft, keep
+  working, and once it appears as approved in your state, send it and run
+  `{CLI} draft mark-sent <id>`. Denied drafts are final; note the reason.
+- Record decisions: `{CLI} decide <text...>` for every kill/scale/pivot
+  decision, with the evidence. Read the recent decisions in your state before
+  proposing a pivot.
 - Notify the operator: `{CLI} notify <message...>` for significant events only
   (first revenue, a shipped deliverable, a real blocker).
 

@@ -49,7 +49,7 @@ function renderHtml(config: Config): string {
     .reverse()
     .map(
       (e) =>
-        `<tr><td>${e.ts}</td><td>${e.type}</td><td style="text-align:right">${e.amount.toFixed(2)}</td><td>${e.currency}</td><td>${esc(e.source)}</td><td>${e.verified ? "✅" : "❓"}</td><td>${esc(e.note ?? "")}</td></tr>`,
+        `<tr><td>${e.ts}</td><td>${e.type}</td><td style="text-align:right">${e.amount.toFixed(2)}</td><td>${e.currency}</td><td>${esc(e.source)}</td><td>${esc(e.business ?? "")}</td><td>${e.verified ? "✅" : "❓"}</td><td>${esc(e.note ?? "")}</td></tr>`,
     )
     .join("");
   return `<!doctype html><meta charset="utf-8"><title>Autonomous Business Console</title>
@@ -64,7 +64,7 @@ function renderHtml(config: Config): string {
  · <span class="k">Open assists:</span> ${open.length}</p>
 ${open.length ? `<ul>${open.map((r) => `<li>[${r.id}] (${esc(r.kind)}) ${esc(r.description)}</li>`).join("")}</ul>` : ""}
 <h2 style="font-size:1.1rem">Ledger (last 50)</h2>
-<table><tr><th>ts</th><th>type</th><th>amount</th><th>cur</th><th>source</th><th>verified</th><th>note</th></tr>${rows}</table>`;
+<table><tr><th>ts</th><th>type</th><th>amount</th><th>cur</th><th>source</th><th>business</th><th>verified</th><th>note</th></tr>${rows}</table>`;
 }
 
 function esc(s: string): string {

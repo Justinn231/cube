@@ -2,6 +2,7 @@ import { loadConfig } from "./config.js";
 import { initLog, log } from "./log.js";
 import { Ledger } from "./ledger.js";
 import { Relay } from "./relay.js";
+import { Drafts } from "./drafts.js";
 import { Telegram, sleep } from "./telegram.js";
 import { runCycle, addSteer } from "./worker.js";
 import { loadState, saveState, localDate } from "./state.js";
@@ -18,6 +19,7 @@ async function main(): Promise<void> {
   const state = loadState(config.dataDir);
   const ledger = new Ledger(config.dataDir);
   const relay = new Relay(config.dataDir);
+  const drafts = new Drafts(config.dataDir);
   const telegram = new Telegram(config.telegramBotToken, config.telegramChatId);
 
   telegram.on("/steer", async (args) => {
@@ -44,6 +46,31 @@ async function main(): Promise<void> {
     const req = relay.settle(id, "rejected", rest.join(" ") || "rejected");
     return req ? `Rejected [${req.id}].` : `No request with id ${id}.`;
   });
+  telegram.on("/drafts", async () => {
+    const pending = drafts.list("pending");
+    return pending.length
+      ? pending
+          .map(
+            (d) =>
+              `[${d.id}] (${d.channel})\n${d.content.length > 500 ? d.content.slice(0, 500) + "…" : d.content}`,
+          )
+          .join("\n---\n")
+      : "No pending drafts.";
+  });
+  telegram.on("/approve", async (args) => {
+    const [id, ...rest] = args.split(" ");
+    if (!id) return "Usage: /approve <draft-id> [note]";
+    const draft = drafts.setStatus(id, "approved", rest.join(" ") || undefined);
+    return draft
+      ? `Approved draft [${draft.id}] — the worker will send it next cycle.`
+      : `No draft with id ${id}.`;
+  });
+  telegram.on("/deny", async (args) => {
+    const [id, ...rest] = args.split(" ");
+    if (!id) return "Usage: /deny <draft-id> <reason>";
+    const draft = drafts.setStatus(id, "rejected", rest.join(" ") || "denied");
+    return draft ? `Denied draft [${draft.id}].` : `No draft with id ${id}.`;
+  });
   telegram.on("/verify", async (args) => {
     const id = args.split(" ")[0];
     if (!id) return "Usage: /verify <ledger-entry-id>";
@@ -59,7 +86,7 @@ async function main(): Promise<void> {
     `supervisor started (worker=${config.workerName}, telegram=${telegram.enabled ? "on" : "off"})`,
   );
   await telegram.send(
-    `🟢 Supervisor started. Worker: ${config.workerName}. Commands: /steer /status /assists /resolve /reject /verify`,
+    `🟢 Supervisor started. Worker: ${config.workerName}. Commands: /steer /status /assists /resolve /reject /verify /drafts /approve /deny`,
   );
 
   let running = true;
@@ -77,8 +104,13 @@ async function main(): Promise<void> {
   while (running && state.cyclesTotal < maxCycles) {
     await maybeSendDailyReport(config, state, telegram);
 
-    log(`cycle ${state.cyclesTotal + 1} starting`);
-    const result = await runCycle(config);
+    const today = localDate();
+    const warRoom =
+      new Date().getDay() === config.warRoomWeekday &&
+      state.lastWarRoomDate !== today;
+    log(`cycle ${state.cyclesTotal + 1} starting${warRoom ? " (war room)" : ""}`);
+    const result = await runCycle(config, { warRoom });
+    if (warRoom) state.lastWarRoomDate = today;
     state.cyclesTotal += 1;
     state.cyclesByStatus[result.status] =
       (state.cyclesByStatus[result.status] ?? 0) + 1;

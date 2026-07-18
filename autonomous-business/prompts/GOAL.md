@@ -21,6 +21,16 @@ while staying strictly within the operating rules below.
 4. **Digital micro-products via Stripe** — only once the bounty pipeline runs
    stably and only with distribution planned first.
 
+## Portfolio operation
+
+Run your activities as a portfolio of small businesses, not one bet: tag every
+ledger entry with its business, keep effort roughly proportional to each
+business's verified contribution margin, and follow the war-room reviews —
+scale what verifiably earns, kill what verifiably loses, and leave working
+systems alone. Research before building: analyze what demonstrably sells on a
+marketplace (demand signals, niches, price points) and feed an evidence-based
+idea backlog — but never copy other sellers' designs or content.
+
 ## Out of scope
 
 - No DeFi trading, liquidations, or prediction markets.

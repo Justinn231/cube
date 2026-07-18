@@ -19,10 +19,14 @@ systemd ──▶ SUPERVISOR (dist/supervisor.js, ein Prozess)
               └─ Dashboard (nur 127.0.0.1): Ledger, Zyklen, offene Assists
 
 Agent-CLI im Zyklus ──▶ dist/cli.js
-              ├─ ledger add …     (jede Einnahme/Ausgabe, append-only JSONL,
-              │                    Einnahmen starten IMMER als "unverified")
+              ├─ ledger add … --business=X  (jede Einnahme/Ausgabe, append-only
+              │                    JSONL, Einnahmen IMMER "unverified", Business-
+              │                    Tag für die Portfolio-G&V)
               ├─ relay request …  (Human-in-the-loop: Accounts, API-Keys, KYC,
               │                    Spend-Approvals — Agent blockiert nie darauf)
+              ├─ draft submit …   (Außenkommunikation als Entwurf: Mensch gibt
+              │                    per /approve frei, Agent sendet + mark-sent)
+              ├─ decide …         (append-only Entscheidungs-Log für Pivots)
               └─ notify …         (wichtige Ereignisse an Telegram)
 ```
 
@@ -40,6 +44,13 @@ Kernideen aus den beiden Experimenten, hier eingebaut:
   Agent arbeitet währenddessen weiter.
 - **Zeitzone, Budget, tägliche Distribution** sind in Config und Prompts fest
   verankert.
+- **Portfolio-Betrieb (aus §12 des Plans):** Jeder Ledger-Eintrag trägt ein
+  `--business`-Tag; der Zyklus-Prompt zeigt die G&V pro Business. Einmal pro
+  Woche (`WAR_ROOM_WEEKDAY`) startet der erste Zyklus als **War-Room-Review**:
+  SCALE/KEEP/KILL je Business, jede Entscheidung ins append-only
+  Entscheidungs-Log (`decide`). Außenkommunikation läuft über die
+  **Entwurfs-Queue**: `draft submit` → Telegram `/drafts`, `/approve <id>`,
+  `/deny <id>` → erst nach Freigabe sendet der Agent und markiert `mark-sent`.
 - **Dreistufiges Modell-Routing:** Frontier-Modell denkt, Mittelklasse führt
   aus, und ein optionales **lokales Modell** (Ollama, z. B. `gemma3:4b-it-qat`)
   übernimmt mechanische Massenarbeit, um Rate-Limits zu strecken und ein

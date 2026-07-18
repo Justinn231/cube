@@ -8,6 +8,7 @@ export interface State {
   cyclesByStatus: Record<string, number>;
   lastCycle: CycleResult | null;
   lastReportDate: string; // YYYY-MM-DD in local time
+  lastWarRoomDate?: string; // YYYY-MM-DD of the last war-room cycle
   currentBackoffMinutes: number;
 }
 

@@ -5,6 +5,8 @@ import os from "node:os";
 import path from "node:path";
 import { Ledger } from "./ledger.js";
 import { Relay } from "./relay.js";
+import { Drafts } from "./drafts.js";
+import { recordDecision, recentDecisions } from "./decisions.js";
 import { localGenerate } from "./localllm.js";
 
 // Minimal smoke test for the pure components (no network, no worker):
@@ -13,8 +15,8 @@ const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ab-smoke-"));
 fs.mkdirSync(path.join(dir, "relay"), { recursive: true });
 
 const ledger = new Ledger(dir);
-const income = ledger.add({ type: "income", amount: 4, currency: "USD", source: "task-market", note: "telegram forwarder bounty" });
-ledger.add({ type: "expense", amount: 0.5, currency: "USD", source: "image-gen credits" });
+const income = ledger.add({ type: "income", amount: 4, currency: "USD", source: "task-market", business: "bounties", note: "telegram forwarder bounty" });
+ledger.add({ type: "expense", amount: 0.5, currency: "USD", source: "image-gen credits", business: "bounties" });
 assert.equal(ledger.readAll().length, 2);
 assert.equal(ledger.totals().income, 4);
 assert.equal(ledger.totals().expenses, 0.5);
@@ -24,6 +26,11 @@ assert.equal(ledger.totals().verifiedIncome, 4);
 assert.equal(ledger.verify("nope"), null);
 assert.throws(() => ledger.add({ type: "income", amount: -1, currency: "USD", source: "x" }));
 
+const byBusiness = ledger.totalsByBusiness();
+assert.equal(byBusiness.get("bounties")?.net, 3.5);
+ledger.add({ type: "income", amount: 1, currency: "USD", source: "x" });
+assert.equal(ledger.totalsByBusiness().get("(untagged)")?.income, 1);
+
 const relay = new Relay(dir);
 const req = relay.create("api-key", "Need a fal.ai API key in .env as FAL_KEY");
 assert.equal(relay.list("open").length, 1);
@@ -31,6 +38,24 @@ assert.equal(relay.settle(req.id, "resolved", "added to .env")?.status, "resolve
 assert.equal(relay.list("open").length, 0);
 assert.equal(relay.list().length, 1);
 assert.equal(relay.settle("nope", "resolved", "x"), null);
+
+// Draft queue: pending → approved → sent; sending unapproved drafts is refused.
+const drafts = new Drafts(dir);
+const draft = drafts.submit("email", "Hi, here is your deliverable.");
+assert.equal(drafts.list("pending").length, 1);
+assert.equal(drafts.setStatus(draft.id, "sent"), null); // not approved yet
+assert.equal(drafts.setStatus(draft.id, "approved")?.status, "approved");
+assert.equal(drafts.setStatus(draft.id, "sent")?.status, "sent");
+const denied = drafts.submit("social-post", "Buy now!!!");
+assert.equal(drafts.setStatus(denied.id, "rejected", "too spammy")?.status, "rejected");
+assert.equal(drafts.setStatus(denied.id, "sent"), null); // rejected stays unsendable
+assert.equal(drafts.list().length, 2);
+
+// Decision log.
+recordDecision(dir, "KILL supplements: -40 USD after 3 weeks of ads");
+recordDecision(dir, "SCALE bounties: net +3.50 USD, best $/h");
+assert.equal(recentDecisions(dir).length, 2);
+assert.match(recentDecisions(dir)[1]!, /SCALE bounties/);
 
 // Local model client against a mock Ollama server.
 const mock = http.createServer((req, res) => {
