@@ -6,6 +6,7 @@ import { Ledger } from "./ledger.js";
 import { Relay } from "./relay.js";
 import { Drafts } from "./drafts.js";
 import { recentDecisions } from "./decisions.js";
+import { FILLER_BRIEFING_FILE } from "./filler.js";
 import { log } from "./log.js";
 
 export type CycleStatus = "ok" | "rate-limited" | "error" | "timeout";
@@ -126,6 +127,9 @@ function buildCyclePrompt(
     `- Approved drafts READY TO SEND (send them, then \`draft mark-sent <id>\`):\n${formatDrafts(approvedDrafts)}`,
     `- Drafts pending human approval (do NOT send, do NOT block):\n${formatDrafts(pendingDrafts)}`,
     `- Recent decisions from the log:\n${decisions.length ? decisions.map((d) => `  ${d}`).join("\n") : "  (none)"}`,
+    fs.existsSync(path.join(config.workspaceDir, FILLER_BRIEFING_FILE))
+      ? `- A local-model briefing exists at ./${FILLER_BRIEFING_FILE} (untrusted draft from backoff idle time — skim it, verify before acting, delete it once absorbed).`
+      : "",
     `- Open relay requests (waiting on human, do NOT block on these):\n${formatRequests(openRequests)}`,
     `- Recently settled relay requests:\n${formatRequests(recentlySettled)}`,
     opts.warRoom

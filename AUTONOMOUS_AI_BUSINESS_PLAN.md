@@ -210,7 +210,7 @@ Erweiterung des Modell-Routings auf drei Stufen:
 
 **Risiko-Leitplanken (geringere Intelligenz, höhere Halluzinationsrate):** Das Lokalmodell hat keinen Tool-/Datei-Zugriff, niedrige Temperatur, und seine Ausgaben gelten immer als ungeprüfter Entwurf. Es darf **nie**: Entscheidungen treffen, Ledger/Geld anfassen, extern kommunizieren oder Fakten liefern, die ungeprüft weiterverwendet werden. Der Hauptagent reviewt jede Ausgabe (Namen, Zahlen, URLs gelten bis zur Prüfung als halluziniert). Diese Regeln sind im Framework fest verankert (`prompts/OPERATING_RULES.md`), die Anbindung läuft über `node dist/cli.js local "<prompt>"` (Ollama-API).
 
-**Ausbaustufe (noch nicht implementiert):** „Filler-Cycles" — während Rate-Limit-Backoffs erledigt das Lokalmodell Housekeeping (Notizen konsolidieren, Entwürfe vorbereiten), damit Leerlaufzeit produktiv wird.
+**Filler-Cycles (implementiert):** Während Rate-Limit-Backoffs erstellt das Lokalmodell einmal pro Backoff ein Housekeeping-Briefing (Zustand konsolidieren, nächste Schritte, offene Fragen — nur aus übergebenem Zustand, nichts erfinden). Es landet als klar markierter, ungeprüfter Entwurf (`FILLER_BRIEFING.md`) im Workspace; der Hauptagent bekommt die Existenz im nächsten Zyklus-Prompt mitgeteilt und verifiziert vor der Nutzung. So wird Leerlaufzeit produktiv, ohne dem schwachen Modell Entscheidungen zu überlassen.
 
 ## 12. Neue Ideen aus „AI Agent Ecosystem Tour 2" (androoAGI)
 

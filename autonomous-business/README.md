@@ -86,7 +86,11 @@ node dist/cli.js local "Fasse zusammen:" < irgendein.log   # manueller Test
 ```
 
 Der Worker bekommt die Verfügbarkeit im Zyklus-Prompt mitgeteilt und delegiert
-dann selbstständig nach den Regeln in `OPERATING_RULES.md`. Größere Varianten:
+dann selbstständig nach den Regeln in `OPERATING_RULES.md`. Zusätzlich laufen
+**Filler-Cycles**: Während eines Rate-Limit-Backoffs schreibt das Lokalmodell
+einmalig ein Housekeeping-Briefing (`FILLER_BRIEFING.md` im Workspace,
+markiert als ungeprüfter Entwurf), das der Worker im nächsten Zyklus
+verifiziert und absorbiert — Leerlaufzeit wird produktiv. Größere Varianten:
 `12b-it-qat` braucht einen 16-GB-VPS, `27b-it-qat` ist CPU-only nicht sinnvoll
 (GPU-Server nötig — rechnet sich erst, wenn man nachweislich am Rate-Limit
 hängt). Die QAT-Varianten sind quantisierungsrobust trainiert und brauchen

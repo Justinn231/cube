@@ -5,6 +5,7 @@ import { Relay } from "./relay.js";
 import { Drafts } from "./drafts.js";
 import { Telegram, sleep } from "./telegram.js";
 import { runCycle, addSteer } from "./worker.js";
+import { runFillerCycle } from "./filler.js";
 import { loadState, saveState, localDate } from "./state.js";
 import { buildDailyReport } from "./report.js";
 import { startDashboard } from "./dashboard.js";
@@ -141,6 +142,9 @@ async function main(): Promise<void> {
       state.currentBackoffMinutes > 0
         ? state.currentBackoffMinutes * 60_000
         : config.cyclePauseSeconds * 1_000;
+    // Rate-limit backoff idle time is handed to the local model for a
+    // housekeeping briefing (filler cycle) — once per backoff.
+    if (state.currentBackoffMinutes > 0) await runFillerCycle(config);
     // Sleep in small slices so SIGTERM stops us promptly.
     const until = Date.now() + pauseMs;
     while (running && Date.now() < until) await sleep(1_000);

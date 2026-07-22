@@ -8,6 +8,8 @@ import { Relay } from "./relay.js";
 import { Drafts } from "./drafts.js";
 import { recordDecision, recentDecisions } from "./decisions.js";
 import { localGenerate } from "./localllm.js";
+import { buildFillerPrompt, runFillerCycle, FILLER_BRIEFING_FILE } from "./filler.js";
+import type { Config } from "./config.js";
 
 // Minimal smoke test for the pure components (no network, no worker):
 //   npm run build && npm run smoke
@@ -85,6 +87,49 @@ await assert.rejects(
   localGenerate("http://127.0.0.1:9", "gemma3:4b-it-qat", "ping"),
   /unreachable/,
 );
+// Filler cycle: prompt stays grounded, briefing lands in the workspace as an
+// untrusted draft, and a missing local model is a clean no-op.
+const fillerPrompt = buildFillerPrompt({
+  notes: "working on logo bounty",
+  decisions: ["- [ts] SCALE bounties"],
+  totalsLine: "income 4.00, net 3.50 USD",
+  openAssists: [],
+  pendingDrafts: [],
+});
+assert.match(fillerPrompt, /do not invent facts/);
+assert.match(fillerPrompt, /working on logo bounty/);
+
+const workspace = path.join(dir, "workspace");
+fs.mkdirSync(workspace, { recursive: true });
+const fillerConfig = {
+  rootDir: dir,
+  dataDir: dir,
+  workspaceDir: workspace,
+  promptsDir: dir,
+  timezone: "Europe/Berlin",
+  workerCmd: "true",
+  workerName: "test",
+  cyclePauseSeconds: 1,
+  maxCycleMinutes: 1,
+  rateLimitBackoffMinutes: 1,
+  maxBackoffMinutes: 1,
+  dailyReportHour: 23,
+  dashboardPort: 0,
+  telegramBotToken: "",
+  telegramChatId: "",
+  spendApprovalThreshold: 5,
+  currency: "USD",
+  ollamaUrl: `http://127.0.0.1:${port}`,
+  localModel: "gemma3:4b-it-qat",
+  localTimeoutSeconds: 10,
+  warRoomWeekday: 0,
+} satisfies Config;
+assert.equal(await runFillerCycle(fillerConfig), true);
+const briefing = fs.readFileSync(path.join(workspace, FILLER_BRIEFING_FILE), "utf8");
+assert.match(briefing, /UNTRUSTED DRAFT/);
+assert.match(briefing, /^echo: /m);
+assert.equal(await runFillerCycle({ ...fillerConfig, localModel: "" }), false);
+
 mock.close();
 
 fs.rmSync(dir, { recursive: true, force: true });
