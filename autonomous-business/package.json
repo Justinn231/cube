@@ -1,0 +1,20 @@
+{
+  "name": "autonomous-business",
+  "version": "0.1.0",
+  "description": "Supervisor/worker framework for a long-running autonomous AI business (model-agnostic).",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/supervisor.js",
+    "cli": "node dist/cli.js",
+    "smoke": "node dist/smoke.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "typescript": "^7.0.2"
+  }
+}
